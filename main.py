@@ -82,6 +82,7 @@ class GUI(wnd, cls):
             self.test_counter = dict['test_counter']
             self.plt_train_log.draw_loss(self.train_counter, self.train_losses, dict['optimizer_name'])
             self.accuracy = dict['accuracy']
+            self.current_optimizer = dict['optimizer_name']
         else:
             self.model = None
             self.train_losses = []
@@ -107,16 +108,15 @@ class GUI(wnd, cls):
             self.accuracy = test(self.model, self.device, self.test_loader, self.test_losses)
             self.acc_log.setPlainText(f'Current model accuracy = {self.accuracy:0.2f} %')
 
-            current_optimizer = self.cb_optim.currentText()
-            if current_optimizer == 'Adadelta':
+            if self.current_optimizer == 'Adadelta':
                 self.acc_log_Adadelta.setPlainText(f'Adadelta accuracy = {self.accuracy:0.2f} %')
-            elif current_optimizer == 'Adagrad':
+            elif self.current_optimizer == 'Adagrad':
                 self.acc_log_Adagrad.setPlainText(f'Adagrad accuracy = {self.accuracy:0.2f} %')  
-            elif current_optimizer == 'Adam':
+            elif self.current_optimizer == 'Adam':
                 self.acc_log_Adam.setPlainText(f'Adam accuracy = {self.accuracy:0.2f} %')
-            elif current_optimizer == 'RMSprop':
+            elif self.current_optimizer == 'RMSprop':
                 self.acc_log_RMSprop.setPlainText(f'RMSprop accuracy = {self.accuracy:0.2f} %')
-            elif current_optimizer == 'SGD':
+            elif self.current_optimizer == 'SGD':
                 self.acc_log_SGD.setPlainText(f'SGD accuracy = {self.accuracy:0.2f} %')
 
     def on_pb_exam_released(self):
@@ -171,16 +171,16 @@ class GUI(wnd, cls):
         self.model = MnistNet().to(self.device)
 
         # Set optimizer
-        current_optimizer = self.cb_optim.currentText()
-        if current_optimizer == 'Adadelta':
+        self.current_optimizer = self.cb_optim.currentText()
+        if self.current_optimizer == 'Adadelta':
             optimizer = optim.Adadelta(self.model.parameters(), lr=self.learning_rate)
-        if current_optimizer == 'Adagrad':
+        if self.current_optimizer == 'Adagrad':
             optimizer = optim.Adagrad(self.model.parameters(), lr=self.learning_rate)   
-        if current_optimizer == 'Adam':
+        if self.current_optimizer == 'Adam':
             optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        if current_optimizer == 'RMSprop':
+        if self.current_optimizer == 'RMSprop':
             optimizer = optim.RMSprop(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
-        elif current_optimizer == 'SGD':
+        elif self.current_optimizer == 'SGD':
             optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
 
         # Clear data
@@ -207,13 +207,13 @@ class GUI(wnd, cls):
                 'test_counter': self.test_counter,
                 'test_losses': self.test_losses,
                 'optimizer': optimizer.state_dict(),
-                'optimizer_name': current_optimizer,
+                'optimizer_name': self.current_optimizer,
                 'accuracy': self.accuracy
             }
             torch.save(save_dict, "./network/results/mnist_cnn.pt")
         
         # Plot train loss vs number of interations
-        self.plt_train_log.draw_loss(self.train_counter, self.train_losses, current_optimizer)
+        self.plt_train_log.draw_loss(self.train_counter, self.train_losses, self.current_optimizer)
 
 
 if __name__ == '__main__':
