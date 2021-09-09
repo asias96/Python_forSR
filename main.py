@@ -10,6 +10,7 @@ from network.mnist import *
 import os.path
 import logging
 
+
 # --------------------- LOGGER ----------------------------------
 class QTextEditLogger(logging.Handler):
     def __init__(self, plainTextWidget):
@@ -25,6 +26,7 @@ class QTextEditLogger(logging.Handler):
 
 # --------------------- GUI ------------------------------------
 cls, wnd = uic.loadUiType('GUI.ui')
+
 
 class GUI(wnd, cls):
     def __init__(self):
@@ -61,15 +63,14 @@ class GUI(wnd, cls):
         test_kwargs = {'batch_size': self.batch_size_test}
         if torch.cuda.is_available():
             cuda_kwargs = {'num_workers': 1,
-                        'pin_memory': True,
-                        'shuffle': True}
+                           'pin_memory': True,
+                           'shuffle': True}
             train_kwargs.update(cuda_kwargs)
             test_kwargs.update(cuda_kwargs)
-        self.train_loader = torch.utils.data.DataLoader(self.dataset_train,**train_kwargs)
+        self.train_loader = torch.utils.data.DataLoader(self.dataset_train, **train_kwargs)
         self.test_loader = torch.utils.data.DataLoader(self.dataset_test, **test_kwargs)
         _, (self.example_data, _) = next(enumerate(self.test_loader))
 
-        
         # --- load saved model -----------------------------------
         if os.path.isfile('./network/results/mnist_cnn.pt'):
             self.model = MnistNet().to(self.device)
@@ -90,12 +91,14 @@ class GUI(wnd, cls):
         self.cb_optim.setCurrentText('SGD')
 
     def on_pb_train_released(self):
+        # Push button triggering training
         self.train_log.setPlainText('Wait...')
         QApplication.processEvents()
         self.trainer()
         self.acc_log.setPlainText(f'Current model accuracy = {self.accuracy:0.2f} %')
 
     def on_pb_acc_released(self):
+        # Push button triggering evaluation
         self.acc_log.setPlainText('Wait...')
         QApplication.processEvents()
         if self.model is None:
@@ -117,6 +120,7 @@ class GUI(wnd, cls):
                 self.acc_log_SGD.setPlainText(f'SGD accuracy = {self.accuracy:0.2f} %')
 
     def on_pb_exam_released(self):
+        # Push button to show example inference
         if self.model is None:
             self.acc_log.setPlainText("There is no trained model.\nClick 'Train the network' first!.")
         else:
@@ -125,76 +129,90 @@ class GUI(wnd, cls):
                 self.plt_example.show_example(self.example_data, output)
 
     def on_pb_show_last_released(self):
+        # Push button triggering training
         if self.train_counter:
             self.plt_train_log.draw_loss(self.train_counter, self.train_losses, 'Last')
         else:
             self.train_log.setPlainText("There is no trained model.\nClick 'Train the network' first!.")
     
     def on_pb_plot_clear_released(self):
+        # Push button to clear plot
         self.plt_train_log.clear_plot()
 
     def on_sb_epochs_valueChanged(self, value):
+        # Spin box to change epochs number
         self.epochs = value
 
     def on_sb_batchsize_valueChanged(self, value):
+        # Spin box to change batchsize
         self.batch_size_train = int(value)
         train_kwargs = {'batch_size': self.batch_size_train}
         if torch.cuda.is_available():
             cuda_kwargs = {'num_workers': 1,
-                        'pin_memory': True,
-                        'shuffle': True}
+                           'pin_memory': True,
+                           'shuffle': True}
             train_kwargs.update(cuda_kwargs)
-        self.train_loader = torch.utils.data.DataLoader(self.dataset_train,**train_kwargs)
+        self.train_loader = torch.utils.data.DataLoader(self.dataset_train, **train_kwargs)
 
     def on_sb_lr_valueChanged(self, value):
+        # Spin box to change learning rate
         self.learning_rate = value
 
     def on_sb_gamma_valueChanged(self, value):
+        # Spin box to change scheduler gamma
         self.gamma = value
 
     def on_sb_step_valueChanged(self, value):
+        # Spin box to change scheduler step size
         self.step_size = value
 
     def trainer(self):
+        # Function to train, evaluate and save model
         self.model = MnistNet().to(self.device)
 
+        # Set optimizer
         current_optimizer = self.cb_optim.currentText()
         if current_optimizer == 'Adadelta':
-            self.optimizer = optim.Adadelta(self.model.parameters(), lr=self.learning_rate)
+            optimizer = optim.Adadelta(self.model.parameters(), lr=self.learning_rate)
         if current_optimizer == 'Adagrad':
-            self.optimizer = optim.Adagrad(self.model.parameters(), lr=self.learning_rate)   
+            optimizer = optim.Adagrad(self.model.parameters(), lr=self.learning_rate)   
         if current_optimizer == 'Adam':
-            self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+            optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         if current_optimizer == 'RMSprop':
-            self.optimizer = optim.RMSprop(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
+            optimizer = optim.RMSprop(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
         elif current_optimizer == 'SGD':
-            self.optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
+            optimizer = optim.SGD(self.model.parameters(), lr=self.learning_rate, momentum=self.momentum)
 
+        # Clear data
         self.test_losses = []
         self.train_losses = []
         self.train_counter = []
         self.test_counter = [i*len(self.train_loader.dataset) for i in range(self.epochs+1)]
 
-        scheduler = StepLR(self.optimizer, step_size=self.step_size, gamma=self.gamma)
+        # Start training for 'epoch'es
+        scheduler = StepLR(optimizer, step_size=self.step_size, gamma=self.gamma)
         self.accuracy = test(self.model, self.device, self.test_loader, self.test_losses)
         for epoch in range(1, self.epochs + 1):
-            train(self.model, self.device, self.train_loader, self.optimizer, epoch, self.train_losses, self.train_counter, self.logger, flush_log=QApplication.processEvents)
+            train(self.model, self.device, self.train_loader, optimizer, epoch, self.train_losses,
+                  self.train_counter, self.logger, flush_log=QApplication.processEvents)
             self.accuracy = test(self.model, self.device, self.test_loader, self.test_losses)
             scheduler.step()
 
+        # Save model
         if self.cb_savemodel.checkState():
             save_dict = {
-                'state_dict' : self.model.state_dict(),
+                'state_dict': self.model.state_dict(),
                 'train_counter': self.train_counter,
                 'train_losses': self.train_losses,
                 'test_counter': self.test_counter,
                 'test_losses': self.test_losses,
-                'optimizer': self.optimizer.state_dict(),
+                'optimizer': optimizer.state_dict(),
                 'optimizer_name': current_optimizer,
                 'accuracy': self.accuracy
             }
             torch.save(save_dict, "./network/results/mnist_cnn.pt")
         
+        # Plot train loss vs number of interations
         self.plt_train_log.draw_loss(self.train_counter, self.train_losses, current_optimizer)
 
 

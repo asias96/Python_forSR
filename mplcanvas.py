@@ -3,8 +3,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 import random
 
+
 class MplCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(Figure())
         self.setParent(parent)
         self.figure.subplots_adjust(bottom=0.2)
@@ -25,7 +26,7 @@ class MplCanvas(FigureCanvasQTAgg):
 
 
 class MnistExample(FigureCanvasQTAgg):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(Figure())
         self.setParent(parent)
         self.figure.subplots_adjust(bottom=0.2)

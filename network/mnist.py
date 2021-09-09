@@ -39,10 +39,11 @@ def train(model, device, train_loader, optimizer, epoch, train_losses, train_cou
         loss.backward()
         optimizer.step()
         if batch_idx % 10 == 0:
-            logger.info(f'Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}')
+            logger.info(f'Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)}'
+                        f' ({100. * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}')
             flush_log()
         train_losses.append(loss.item())
-        train_counter.append((batch_idx) + ((epoch-1)*len(train_loader)))
+        train_counter.append(batch_idx + ((epoch-1)*len(train_loader)))
 
 
 def test(model, device, test_loader, test_losses):
@@ -59,5 +60,6 @@ def test(model, device, test_loader, test_losses):
     test_loss /= len(test_loader.dataset)
     test_losses.append(test_loss)
     accuracy = 100. * correct / len(test_loader.dataset)
-    print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{ len(test_loader.dataset) } ({accuracy:.0f}%)\n')
+    print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{ len(test_loader.dataset) } '
+          f'({accuracy:.0f}%)\n')
     return accuracy
