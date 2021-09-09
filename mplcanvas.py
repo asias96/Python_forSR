@@ -19,6 +19,8 @@ class MplCanvas(FigureCanvasQTAgg):
 
     def clear_plot(self):
         self.axes.clear()
+        self.axes.set_xlabel('number of iterations')
+        self.axes.set_ylabel('train loss')
         self.draw()
 
 
