@@ -30,8 +30,8 @@ use_cuda = torch.cuda.is_available()
 transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))])
-dataset_train = datasets.MNIST('../data', train=True, download=True, transform=transform)
-dataset_test = datasets.MNIST('../data', train=False, transform=transform)
+dataset_train = datasets.MNIST('./data', train=True, download=True, transform=transform)
+dataset_test = datasets.MNIST('./data', train=False, transform=transform)
 
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
