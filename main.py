@@ -7,7 +7,7 @@ import torch.optim as optim
 import torch
 from torchvision import datasets, transforms
 from network.mnist import *
-import os.path
+import os
 import logging
 
 
@@ -210,6 +210,7 @@ class GUI(wnd, cls):
                 'optimizer_name': self.current_optimizer,
                 'accuracy': self.accuracy
             }
+            os.makedirs('./network/results', exist_ok=True)
             torch.save(save_dict, "./network/results/mnist_cnn.pt")
         
         # Plot train loss vs number of interations
